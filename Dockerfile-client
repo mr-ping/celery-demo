@@ -1,0 +1,20 @@
+FROM python:2.7-alpine
+MAINTAINER yangping <yangping@sci99.com>
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+RUN apk update
+RUN apk add tzdata
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone
+RUN apk del tzdata
+RUN apk add python-dev
+RUN apk add libevent-dev
+RUN apk add g++
+
+RUN mkdir /code
+ADD ./client/requirements.txt /code
+RUN pip install -r /code/requirements.txt -i https://pypi.douban.com/simple
+
+WORKDIR /code
+
+ENTRYPOINT ["python", "main.py"]

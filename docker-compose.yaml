@@ -1,0 +1,65 @@
+version: '3'
+services:
+    rabbit:
+        image: rabbitmq:management-alpine
+        hostname: host-rabbit
+        container_name: rabbit
+        networks:
+            - celery
+        ports:
+            - "15672:15672"
+
+    client:
+        build:
+            context: .
+            dockerfile: Dockerfile-client
+        hostname: host-client
+        container_name: client
+        networks:
+            - celery
+        volumes:
+            - ./client:/code
+        ports:
+            - "8888:8888"
+
+    server:
+        build:
+            context: .
+            dockerfile: Dockerfile-server
+        hostname: host-server
+        container_name: server
+        networks:
+            - celery
+        volumes:
+            - ./server:/code
+        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "-n worker@%h", "--concurrency=10"]
+
+    server1:
+        build:
+            context: .
+            dockerfile: Dockerfile-server
+        hostname: host-server1
+        container_name: server1
+        networks:
+            - celery
+        volumes:
+            - ./server:/code
+        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "-n worker1@%h", "--concurrency=20"]
+
+    flower:
+        build:
+            context: .
+            dockerfile: Dockerfile-server
+        hostname: host-flower
+        container_name: flower
+        networks:
+            - celery
+        volumes:
+            - ./server:/code
+        ports:
+            - "5555:5555"
+        command: ["celery", "-A", "tasks", "flower"]
+
+
+networks:
+    celery:
